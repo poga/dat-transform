@@ -7,7 +7,7 @@ Similiar to [Spark](http://spark.apache.org)'s [Resilient Distributed Dataset(RD
 
 word count example:
 
-```
+```js
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const RDD = require('dat-transform')
