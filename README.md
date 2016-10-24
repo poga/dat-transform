@@ -1,7 +1,7 @@
 # dat-transform
 
 Row-based, lazily-evaluated, transformation on [Dat](http://dat-data.com/) archives.
-Similiar to [Spark](spark.apache.org)'s [Resilient Distributed Dataset(RDD)](https://amplab.cs.berkeley.edu/wp-content/uploads/2012/01/nsdi_spark.pdf)
+Similiar to [Spark](http://spark.apache.org)'s [Resilient Distributed Dataset(RDD)](https://amplab.cs.berkeley.edu/wp-content/uploads/2012/01/nsdi_spark.pdf)
 
 ## Usage
 
