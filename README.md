@@ -11,9 +11,8 @@ word count example:
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const dt = require('dat-transform')
-var drive = hyperdrive(memdb())
 
-// create a new hyperspark RDD point to a existing dat archive
+var drive = hyperdrive(memdb())
 var archive = drive.createArchive(<DAT-ARCHIVE-KEY>)
 
 // define transforms
