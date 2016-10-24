@@ -24,7 +24,7 @@ source.finalize(() => {
     var newArchive = drive2.createArchive()
     result.partition(x => x % 2, newArchive, (next) => {
       next
-        .action(_.take(null), _.take(null))
+        .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['value\n1\n2\n3\n4\n5\n\nvalue\n6\n7\n8\n9\n10\n'])
           t.same(downloaded, 33)
@@ -42,7 +42,7 @@ source.finalize(() => {
 
     var result = RDD(peer)
     result.get('test.csv')
-      .action(_.take(null), _.take(null))
+      .collect()
       .toArray(x => {
         t.same(x.map(b => b.toString()), ['value\n1\n2\n3\n4\n5\n'])
         t.same(downloaded, 16)
@@ -58,8 +58,9 @@ source.finalize(() => {
     replicate(source, peer)
 
     var result = RDD(peer)
-    result.select(x => x.name === 'test2.csv')
-      .action(_.take(null), _.take(null))
+    result
+      .select(x => x.name === 'test2.csv')
+      .collect()
       .toArray(x => {
         t.same(x.map(b => b.toString()), ['value\n6\n7\n8\n9\n10\n'])
         t.same(downloaded, 17)

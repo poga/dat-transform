@@ -1,5 +1,6 @@
 const through2 = require('through2')
 const _ = require('highland')
+const a = require('./action')
 
 function RDD (archive, parent, transform) {
   if (!(this instanceof RDD)) return new RDD(archive, parent, transform)
@@ -52,6 +53,19 @@ RDD.prototype.transform = function (transform) {
   return new RDD(this._archive, this, transform)
 }
 
+RDD.prototype.splitBy = function (sep) {
+  return this.transform(_.splitBy(sep))
+}
+
+// transforms
+RDD.prototype.map = function (f) {
+  return this.transform(_.map(f))
+}
+
+RDD.prototype.filter = function (f) {
+  return this.transform(_.filter(f))
+}
+
 // do action
 // evaluation transformation chain. Then apply a transform to each file, then apply a transform to flattened data
 RDD.prototype.action = function (fileAction, totalAction) {
@@ -59,6 +73,19 @@ RDD.prototype.action = function (fileAction, totalAction) {
     .pipe(mapToFilePipe(fileAction))
     .flatten()
     .pipe(pipe(totalAction))
+}
+
+// actions
+RDD.prototype.collect = function () {
+  return this.take(null)
+}
+
+RDD.prototype.take = function (n) {
+  return this.action(_.take(n), _.take(n))
+}
+
+RDD.prototype.reduceByKey = function (f) {
+  return this.action(_.take(null), a.reduceByKey(f))
 }
 
 // private methods

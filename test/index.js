@@ -4,7 +4,6 @@ const memdb = require('memdb')
 const tape = require('tape')
 const fs = require('fs')
 const tf = require('../transform')
-const a = require('../action')
 
 var drive = hyperdrive(memdb())
 var source = drive.createArchive()
@@ -19,12 +18,12 @@ source.finalize(() => {
 
   var result = RDD(peer)
     .transform(tf.csv())
-    .transform(tf.map(row => parseInt(row['value'], 10)))
-    .transform(tf.map(x => x * 2))
-    .transform(tf.map(x => x + 1))
+    .map(row => parseInt(row['value'], 10))
+    .map(x => x * 2)
+    .map(x => x + 1)
 
   tape('take 1', function (t) {
-    result.action(a.take(1), a.take(1))
+    result.take(1)
       .toArray(res => {
         t.same(res, [3])
         t.end()
@@ -32,7 +31,7 @@ source.finalize(() => {
   })
 
   tape('take all', function (t) {
-    result.action(a.take(null), a.take(null))
+    result.collect()
       .sortBy((a, b) => { return a - b })
       .toArray(res => {
         t.same(res, [3, 5, 7, 9, 11, 13, 15, 17, 19, 21])

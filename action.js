@@ -12,7 +12,5 @@ function reduceByKey (f) {
 }
 
 module.exports = {
-  take: _.take,
-  reduce: _.reduce,
   reduceByKey
 }

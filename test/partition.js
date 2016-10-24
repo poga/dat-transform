@@ -4,7 +4,6 @@ const memdb = require('memdb')
 const tape = require('tape')
 const fs = require('fs')
 const tf = require('../transform')
-const _ = require('highland')
 
 var drive = hyperdrive(memdb())
 var source = drive.createArchive()
@@ -19,13 +18,13 @@ source.finalize(() => {
 
   var result = RDD(peer)
     .transform(tf.csv())
-    .transform(tf.map(row => parseInt(row['value'], 10)))
+    .map(row => parseInt(row['value'], 10))
 
   tape('partition', function (t) {
     var newArchive = drive2.createArchive()
     result.partition(x => x % 2, newArchive, (next) => {
       next
-        .action(_.take(null), _.take(null))
+        .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['1\n3\n5\n7\n9', '2\n4\n6\n8\n10'])
           t.end()
@@ -38,7 +37,7 @@ source.finalize(() => {
     result.partition(x => x % 2, newArchive, (next) => {
       next
         .get('0')
-        .action(_.take(null), _.take(null))
+        .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['2\n4\n6\n8\n10'])
           t.end()
@@ -51,7 +50,7 @@ source.finalize(() => {
     result.partition(x => x % 3, newArchive, (next) => {
       next
         .select(x => parseInt(x.name) < 2) // x % 3 < 2
-        .action(_.take(null), _.take(null))
+        .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['1\n4\n7\n10', '3\n6\n9'])
           t.end()
