@@ -5,17 +5,28 @@ Similiar to [Spark](http://spark.apache.org)'s [Resilient Distributed Dataset(RD
 
 ## Usage
 
-First, share your data with Dat:
+word count example:
 
 ```
-$ cat names.txt
-John
-Alice
-Jack
-Stacy
+const hyperdrive = require('hyperdrive')
+const memdb = require('memdb')
+const RDD = require('dat-transform')
+var drive = hyperdrive(memdb())
 
-$ dat .
+// create a new hyperspark RDD point to a existing dat archive
+var archive = drive.createArchive(<DAT-ARCHIVE-KEY>)
 
+// define transforms
+var result = RDD(archive)
+  .splitBy(/[\n\s]/)
+  .filter(x => x !== '')
+  .map(word => kv(word, 1))
+
+// actual run(action)
+result.reduceByKey((x, y) => x + y)
+  .toArray(res => {
+    console.log(res) // [{bar: 2, baz: 1, foo: 1}]
+  })
 ```
 
 #### Transform & Action
