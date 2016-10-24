@@ -1,4 +1,4 @@
-const RDD = require('..')
+const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const tape = require('tape')
@@ -14,10 +14,10 @@ source.finalize(() => {
   var peer = drive2.createArchive(source.key, {sparse: true})
   replicate(source, peer)
 
-  var result = RDD(peer)
+  var result = dt.RDD(peer)
     .splitBy(/[\n\s]/)
     .filter(x => x !== '')
-    .map(word => kv(word, 1))
+    .map(word => dt.kv(word, 1))
 
   tape('word count', function (t) {
     result.reduceByKey((x, y) => x + y)
@@ -31,8 +31,4 @@ source.finalize(() => {
 function replicate (a, b) {
   var stream = a.replicate()
   stream.pipe(b.replicate()).pipe(stream)
-}
-
-function kv (k, v) {
-  return {k: k, v: v}
 }

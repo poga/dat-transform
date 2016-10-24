@@ -1,4 +1,4 @@
-const RDD = require('..')
+const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const tape = require('tape')
@@ -16,7 +16,7 @@ source.finalize(() => {
   var peer = drive2.createArchive(source.key, {sparse: true})
   replicate(source, peer)
 
-  var result = RDD(peer)
+  var result = dt.RDD(peer)
     .transform(tf.csv())
     .map(row => parseInt(row['value'], 10))
 

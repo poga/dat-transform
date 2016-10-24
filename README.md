@@ -10,17 +10,17 @@ word count example:
 ```js
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const RDD = require('dat-transform')
+const dt = require('dat-transform')
 var drive = hyperdrive(memdb())
 
 // create a new hyperspark RDD point to a existing dat archive
 var archive = drive.createArchive(<DAT-ARCHIVE-KEY>)
 
 // define transforms
-var result = RDD(archive)
+var result = dt.RDD(archive)
   .splitBy(/[\n\s]/)
   .filter(x => x !== '')
-  .map(word => kv(word, 1))
+  .map(word => dt.kv(word, 1))
 
 // actual run(action)
 result.reduceByKey((x, y) => x + y)

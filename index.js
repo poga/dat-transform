@@ -109,7 +109,12 @@ RDD.prototype._eachFile = function (filter) {
   })))
 }
 
-module.exports = RDD
+// simple helper for mapping to key-value pairs
+function kv (k, v) {
+  return {k: k, v: v}
+}
+
+module.exports = {RDD, kv}
 
 function mapToFilePipe (action) {
   return pipe(_.map(file => action(file)))
@@ -126,3 +131,4 @@ function mapToFile (transform) {
 function all (x) {
   return true
 }
+

@@ -1,9 +1,8 @@
-const RDD = require('..')
+const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const tape = require('tape')
 const fs = require('fs')
-const _ = require('highland')
 
 var drive = hyperdrive(memdb())
 var source = drive.createArchive()
@@ -19,7 +18,7 @@ source.finalize(() => {
     peer.on('download', data => { downloaded += data.length })
     replicate(source, peer)
 
-    var result = RDD(peer)
+    var result = dt.RDD(peer)
 
     var newArchive = drive2.createArchive()
     result.partition(x => x % 2, newArchive, (next) => {
@@ -40,7 +39,7 @@ source.finalize(() => {
     peer.on('download', data => { downloaded += data.length })
     replicate(source, peer)
 
-    var result = RDD(peer)
+    var result = dt.RDD(peer)
     result.get('test.csv')
       .collect()
       .toArray(x => {
@@ -57,7 +56,7 @@ source.finalize(() => {
     peer.on('download', data => { downloaded += data.length })
     replicate(source, peer)
 
-    var result = RDD(peer)
+    var result = dt.RDD(peer)
     result
       .select(x => x.name === 'test2.csv')
       .collect()
