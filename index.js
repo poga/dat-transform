@@ -49,15 +49,17 @@ RDD.prototype.select = function (selector) {
   return this
 }
 
+// define a lazily-evaluated transformation on this RDD
+// ususally, you want to use transform defined below instead of use this method
 RDD.prototype.transform = function (transform) {
   return new RDD(this._archive, this, transform)
 }
 
+// transforms
 RDD.prototype.splitBy = function (sep) {
   return this.transform(_.splitBy(sep))
 }
 
-// transforms
 RDD.prototype.map = function (f) {
   return this.transform(_.map(f))
 }
@@ -68,6 +70,7 @@ RDD.prototype.filter = function (f) {
 
 // do action
 // evaluation transformation chain. Then apply a transform to each file, then apply a transform to flattened data
+// usually, you want to use actions defined below instead of use this method
 RDD.prototype.action = function (fileAction, totalAction) {
   return this._applyTransform()
     .pipe(mapToFilePipe(fileAction))

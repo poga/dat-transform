@@ -10,7 +10,7 @@
     "through2": "^2.0.1"
   },
   "name": "dat-transform",
-  "description": "Row-based, lazily-evaluated transformation on Dat archives.",
+  "description": "row-based, lazily-evaluated transformation on Dat archives.",
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
