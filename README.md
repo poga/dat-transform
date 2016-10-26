@@ -30,9 +30,45 @@ result.reduceByKey((x, y) => x + y)
 
 #### Transform & Action
 
+**Transforms** are lazily-evaluated function on a dat archive.
+Define a transform on a RDD will not trigger computation immediately.
+Instead, transformations will be pipelined and computed when we actually need the result, therefore provides opportunities of optimization.
+
+Following transforms are included:
+
+```
+map(f)
+filter(f)
+splitBy(f)
+```
+
+**Actions** are operations that returns a value to the application.
+
+Examples of actions:
+
+```
+collect()
+take(n)
+reduceByKey(f)
+```
+
 #### Select
 
+`dat-transform` provides indexing via [hyperdrive](https://github.com/mafintosh/hyperdrive)'s list of entry.
+You can specify the entries you want to computed with, which can greatly reduce bandwidth usage.
+
+```
+get(entryName)
+select(f)
+```
+
 #### Partition
+
+**Partitions** lets you re-index and cache the computed result to another archive.
+
+```
+partition(f, outArchive, cb)
+```
 
 ## How it works
 
