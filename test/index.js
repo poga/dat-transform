@@ -38,6 +38,18 @@ source.finalize(() => {
         t.end()
       })
   })
+
+  tape('transform can be reused', function (t) {
+    result
+      .take(2)
+      .toArray(res => {
+        t.same(res, [3, 5])
+        result.take(1).toArray(res => {
+          t.same(res, [3])
+          t.end()
+        })
+      })
+  })
 })
 
 function replicate (a, b) {
