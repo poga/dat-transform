@@ -11,13 +11,20 @@ function RDD (archive, parent, transform) {
   this._selector = all
 }
 
-RDD.prototype.partition = function (f, outArchive, cb) {
+RDD.prototype.partition = function (f, outArchive) {
   var partitions = {}
 
-  this
-    .action(_.take(null), _.map(x => { return {p: f(x), v: x} }))
-    .each(x => getPartition(x.p).write(`${x.v}`))
-    .done(endPartitions)
+  return new Promise((resolve, reject) => {
+    this
+      .action(_.take(null), _.map(x => { return {p: f(x), v: x} }))
+      .each(x => getPartition(x.p).write(`${x.v}`))
+      .done(endPartitions)
+
+    function endPartitions () {
+      Object.keys(partitions).forEach(k => partitions[k].end())
+      outArchive.finalize(() => { resolve(new RDD(outArchive)) })
+    }
+  })
 
   function getPartition (key) {
     if (!partitions[key]) {
@@ -27,11 +34,6 @@ RDD.prototype.partition = function (f, outArchive, cb) {
       )
     }
     return partitions[key]
-  }
-
-  function endPartitions () {
-    Object.keys(partitions).forEach(k => partitions[k].end())
-    outArchive.finalize(() => { cb(new RDD(outArchive)) })
   }
 }
 

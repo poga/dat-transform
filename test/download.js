@@ -21,7 +21,7 @@ source.finalize(() => {
     var result = dt.RDD(peer)
 
     var newArchive = drive2.createArchive()
-    result.partition(x => x % 2, newArchive, (next) => {
+    result.partition(x => x % 2, newArchive).then(next => {
       next
         .collect()
         .toArray(x => {

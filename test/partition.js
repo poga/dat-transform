@@ -22,7 +22,7 @@ source.finalize(() => {
 
   tape('partition', function (t) {
     var newArchive = drive2.createArchive()
-    result.partition(x => x % 2, newArchive, (next) => {
+    result.partition(x => x % 2, newArchive).then(next => {
       next
         .collect()
         .toArray(x => {
@@ -34,7 +34,7 @@ source.finalize(() => {
 
   tape('get', function (t) {
     var newArchive = drive2.createArchive()
-    result.partition(x => x % 2, newArchive, (next) => {
+    result.partition(x => x % 2, newArchive).then(next => {
       next
         .get('0')
         .collect()
@@ -47,7 +47,7 @@ source.finalize(() => {
 
   tape('select', function (t) {
     var newArchive = drive2.createArchive()
-    result.partition(x => x % 3, newArchive, (next) => {
+    result.partition(x => x % 3, newArchive).then(next => {
       next
         .select(x => parseInt(x.name) < 2) // x % 3 < 2
         .collect()
