@@ -50,6 +50,22 @@ source.finalize(() => {
         })
       })
   })
+
+  tape('transform can be used concurrently', function (t) {
+    var c = 0
+    result.take(2).toArray(res => {
+      t.same(res, [3, 5])
+      c += 1
+      if (c === 2) done()
+    })
+    result.take(1).toArray(res => {
+      t.same(res, [3])
+      c += 1
+      if (c === 2) done()
+    })
+
+    function done () { t.end() }
+  })
 })
 
 function replicate (a, b) {
