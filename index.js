@@ -60,19 +60,31 @@ RDD.prototype.transform = function (transform) {
 
 // transforms
 RDD.prototype.splitBy = function (sep) {
-  return this.transform(_.splitBy(sep))
+  var next = this.transform(_.splitBy(sep))
+  if (sep instanceof RegExp) {
+    next._setMarshalInfo('splitBy', sep.source, 'regexp')
+  } else {
+    next._setMarshalInfo('splitBy', sep.source, 'string')
+  }
+  return next
 }
 
 RDD.prototype.map = function (f) {
-  return this.transform(_.map(f))
+  var next = this.transform(_.map(f))
+  next._setMarshalInfo('map', f.toString())
+  return next
 }
 
 RDD.prototype.filter = function (f) {
-  return this.transform(_.filter(f))
+  var next = this.transform(_.filter(f))
+  next._setMarshalInfo('filter', f.toString())
+  return next
 }
 
 RDD.prototype.csv = function () {
-  return this.transform(tf.csv())
+  var next = this.transform(tf.csv())
+  next._setMarshalInfo('csv', null)
+  return next
 }
 
 // do action
@@ -119,12 +131,70 @@ RDD.prototype._eachFile = function (filter) {
   })))
 }
 
+RDD.prototype.marshal = function () {
+  if (this._parent) {
+    return this._parent.marshal().concat(this._marshalTransform())
+  }
+
+  return [{type: 'parent', key: this._archive.key.toString('hex')}]
+}
+
+RDD.prototype._marshalTransform = function () {
+  return {
+    type: this._marshalTransformType,
+    params: this._marshalTransformParams,
+    paramsType: this._marshalTransformParamsType
+  }
+}
+
+RDD.prototype._setMarshalInfo = function (type, params, paramsType) {
+  this._marshalTransformType = type
+  this._marshalTransformParams = params
+  this._marshalTransformParamsType = paramsType
+}
+
+function unmarshal (drive, json) {
+  return _unmarshal(drive, null, JSON.parse(json))
+}
+
+/* eslint-disable no-eval */
+function _unmarshal (drive, previous, transforms) {
+  if (transforms.length === 0) return previous
+
+  var head = transforms.shift()
+  var rdd
+  switch (head.type) {
+    case 'parent':
+      rdd = new RDD(drive.createArchive(head.key, {sparse: true}))
+      break
+    case 'splitBy':
+      if (head.paramsType === 'regexp') {
+        rdd = previous.splitBy(new RegExp(head.params))
+      } else {
+        rdd = previous.splitBy(head.params)
+      }
+      break
+    case 'map':
+      rdd = previous.map(eval(head.params))
+      break
+    case 'filter':
+      rdd = previous.filter(eval(head.params))
+      break
+    case 'csv':
+      rdd = previous.csv()
+      break
+  }
+
+  return _unmarshal(drive, rdd, transforms)
+}
+/* eslint-enable no-new-func*/
+
 // create key-value pairs for reduceByKey
 function kv (k, v) {
   return {k: k, v: v}
 }
 
-module.exports = {RDD, kv}
+module.exports = {RDD, kv, unmarshal}
 
 function mapToFilePipe (action) {
   return pipe(_.map(file => action(file)))
