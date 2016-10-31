@@ -3,7 +3,6 @@ const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
 const tape = require('tape')
 const fs = require('fs')
-const tf = require('../transform')
 
 var drive = hyperdrive(memdb())
 var source = drive.createArchive()
@@ -17,7 +16,7 @@ source.finalize(() => {
   replicate(source, peer)
 
   var result = dt.RDD(peer)
-    .transform(tf.csv())
+    .csv()
     .map(row => parseInt(row['value'], 10))
     .map(x => x * 2)
     .map(x => x + 1)

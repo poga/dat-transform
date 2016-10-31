@@ -1,6 +1,7 @@
 const through2 = require('through2')
 const _ = require('highland')
 const a = require('./action')
+const tf = require('./transform')
 
 function RDD (archive, parent, transform) {
   if (!(this instanceof RDD)) return new RDD(archive, parent, transform)
@@ -68,6 +69,10 @@ RDD.prototype.map = function (f) {
 
 RDD.prototype.filter = function (f) {
   return this.transform(_.filter(f))
+}
+
+RDD.prototype.csv = function () {
+  return this.transform(tf.csv())
 }
 
 // do action
