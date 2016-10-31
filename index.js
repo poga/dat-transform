@@ -51,7 +51,7 @@ RDD.prototype.select = function (selector) {
   return this
 }
 
-// define a lazily-evaluated transformation on this RDD
+// define a lazily-evaluated transformation on this RDD, retruns new RDD
 // ususally, you want to use transform defined below instead of use this method
 RDD.prototype.transform = function (transform) {
   return new RDD(this._archive, this, transform)
@@ -114,7 +114,7 @@ RDD.prototype._eachFile = function (filter) {
   })))
 }
 
-// simple helper for mapping to key-value pairs
+// create key-value pairs for reduceByKey
 function kv (k, v) {
   return {k: k, v: v}
 }
