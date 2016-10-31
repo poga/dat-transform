@@ -11,12 +11,17 @@
   },
   "name": "dat-transform",
   "description": "row-based, lazily-evaluated transformation on Dat archives.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js"
   },
-  "keywords": ["dat", "spark", "rdd", "data processing"],
+  "keywords": [
+    "dat",
+    "spark",
+    "rdd",
+    "data processing"
+  ],
   "author": "Poga Po<poga.bahamut@gmail.com>",
   "license": "MIT"
 }
