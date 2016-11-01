@@ -11,7 +11,7 @@
   },
   "name": "dat-transform",
   "description": "row-based, lazily-evaluated transformation on Dat archives.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js"
