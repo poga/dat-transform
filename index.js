@@ -2,6 +2,7 @@ const through2 = require('through2')
 const _ = require('highland')
 const a = require('./action')
 const tf = require('./transform')
+const path = require('path')
 
 function RDD (archive, parent, transform) {
   if (!(this instanceof RDD)) return new RDD(archive, parent, transform)
@@ -126,7 +127,7 @@ RDD.prototype._applyTransform = function () {
 RDD.prototype._eachFile = function (filter) {
   var archive = this._archive
   return _(archive.list({live: false}).pipe(through2.obj(function (entry, enc, cb) {
-    if (filter(entry)) this.push(_(archive.createFileReadStream(entry)))
+    if (filter(entry) && !path.basename(entry.name).startsWith('.')) this.push(_(archive.createFileReadStream(entry)))
     cb()
   })))
 }
