@@ -70,6 +70,15 @@ select(f)
 partition(f, outArchive, cb)
 ```
 
+#### Marshal/Unmarshal
+
+Transforms can be marshalled as JSON. which allows execution on remote machine.
+
+```
+RDD.marshal
+unmarshal
+```
+
 ## How it works
 
 `dat-transform` use streams from [highland.js](http://highlandjs.org/), which provides lazy-evaluation and back-pressure.
