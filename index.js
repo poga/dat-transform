@@ -118,7 +118,25 @@ RDD.prototype.takeSortedBy = function (f) {
 }
 
 RDD.prototype.reduceByKey = function (f) {
-  return this.action(_.take(null), a.reduceByKey(f))
+  return this.action(
+    a.reduceByKey(f),
+    _.reduce({}, (sum, x) => {
+      return objToKV(x).reduce((sum, x) => {
+        if (!sum[x.k]) {
+          sum[x.k] = x.v
+        } else {
+          sum[x.k] = f(sum[x.k], x.v)
+        }
+        return sum
+      }, sum)
+    }))
+}
+
+function objToKV (obj) {
+  return Object.keys(obj).reduce((mem, k) => {
+    mem.push(kv(k, obj[k]))
+    return mem
+  }, [])
 }
 
 RDD.prototype.count = function () {
