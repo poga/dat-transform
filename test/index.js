@@ -21,6 +21,44 @@ source.finalize(() => {
     .map(x => x * 2)
     .map(x => x + 1)
 
+  // since transform is applied to each file, we won't get correct data
+  tape('sort', function (t) {
+    result.sortBy((x, y) => y - x)
+      .collect()
+      .toArray(res => {
+        t.same(res, [11, 9, 7, 5, 3, 21, 19, 17, 15, 13])
+        t.end()
+      })
+  })
+
+  // if we want to sort the whole data, use takeSortBy
+  tape('takeSortedBy', function (t) {
+    result
+      .takeSortedBy((x, y) => y - x)
+      .toArray(res => {
+        t.same(res, [21, 19, 17, 15, 13, 11, 9, 7, 5, 3])
+        t.end()
+      })
+  })
+
+  tape('count', function (t) {
+    result
+      .count()
+      .toArray(res => {
+        t.same(res, [10])
+        t.end()
+      })
+  })
+
+  tape('sum', function (t) {
+    result
+      .sum()
+      .toArray(res => {
+        t.same(res, [120])
+        t.end()
+      })
+  })
+
   tape('take 1', function (t) {
     result.take(1)
       .toArray(res => {

@@ -88,6 +88,12 @@ RDD.prototype.csv = function () {
   return next
 }
 
+RDD.prototype.sortBy = function (f) {
+  var next = this.transform(_.sortBy(f))
+  next._setMarshalInfo('sortBy', f.toString())
+  return next
+}
+
 // do action
 // evaluation transformation chain. Then apply a transform to each file, then apply a transform to flattened data
 // usually, you want to use actions defined below instead of use this method
@@ -107,8 +113,28 @@ RDD.prototype.take = function (n) {
   return this.action(_.take(n), _.take(n))
 }
 
+RDD.prototype.takeSortedBy = function (f) {
+  return this.action(_.take(null), _.sortBy(f))
+}
+
 RDD.prototype.reduceByKey = function (f) {
   return this.action(_.take(null), a.reduceByKey(f))
+}
+
+RDD.prototype.count = function () {
+  return this.action(counter(), sum())
+}
+
+RDD.prototype.sum = function () {
+  return this.action(sum(), sum())
+}
+
+function counter (f) {
+  return _.reduce(0, (sum, x) => sum + 1)
+}
+
+function sum () {
+  return _.reduce(0, (sum, x) => sum + x)
 }
 
 // private methods
@@ -183,6 +209,9 @@ function _unmarshal (drive, previous, transforms) {
       break
     case 'csv':
       rdd = previous.csv()
+      break
+    case 'sortBy':
+      rdd = previous.sortBy(eval(head.params))
       break
   }
 

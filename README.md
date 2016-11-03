@@ -31,8 +31,10 @@ result.reduceByKey((x, y) => x + y)
 #### Transform & Action
 
 **Transforms** are lazily-evaluated function on a dat archive.
-Define a transform on a RDD will not trigger computation immediately.
+Defining a transform on a RDD will not trigger computation immediately.
 Instead, transformations will be pipelined and computed when we actually need the result, therefore provides opportunities of optimization.
+
+**Transforms are applied to each file separately.**
 
 Following transforms are included:
 
@@ -40,6 +42,7 @@ Following transforms are included:
 map(f)
 filter(f)
 splitBy(f)
+sortBy(f) // check test/index.js for gotcha
 ```
 
 **Actions** are operations that returns a value to the application.
@@ -50,6 +53,9 @@ Examples of actions:
 collect()
 take(n)
 reduceByKey(f)
+count()
+sum()
+takeSortedBy()
 ```
 
 #### Select
