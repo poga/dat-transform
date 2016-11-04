@@ -8,6 +8,7 @@ var drive = hyperdrive(memdb())
 var source = drive.createArchive()
 
 fs.createReadStream('test/words.txt').pipe(source.createFileWriteStream('words.txt'))
+fs.createReadStream('test/words.txt').pipe(source.createFileWriteStream('words2.txt'))
 
 source.finalize(() => {
   var drive2 = hyperdrive(memdb())
@@ -22,7 +23,7 @@ source.finalize(() => {
   tape('word count', function (t) {
     result.reduceByKey((x, y) => x + y)
       .toArray(res => {
-        t.same(res, [{bar: 2, baz: 1, foo: 1}])
+        t.same(res, [{bar: 4, baz: 2, foo: 2}])
         t.end()
       })
   })
