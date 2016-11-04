@@ -13,7 +13,7 @@ const memdb = require('memdb')
 const {RDD, kv} = require('dat-transform')
 
 var drive = hyperdrive(memdb())
-var archive = drive.createArchive(<DAT-ARCHIVE-KEY>)
+var archive = drive.createArchive(<DAT-ARCHIVE-KEY>, {sparse: true})
 
 // define transforms
 var result = RDD(archive)
