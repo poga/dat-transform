@@ -119,24 +119,13 @@ RDD.prototype.takeSortedBy = function (f) {
 
 RDD.prototype.reduceByKey = function (f) {
   return this.action(
+    // mapToFilePipe will reuse fileAction to eachFile,
+    // so the reducer will be applied to all file
     a.reduceByKey(f),
-    _.reduce({}, (sum, x) => {
-      return objToKV(x).reduce((sum, x) => {
-        if (!sum[x.k]) {
-          sum[x.k] = x.v
-        } else {
-          sum[x.k] = f(sum[x.k], x.v)
-        }
-        return sum
-      }, sum)
-    }))
-}
-
-function objToKV (obj) {
-  return Object.keys(obj).reduce((mem, k) => {
-    mem.push(kv(k, obj[k]))
-    return mem
-  }, [])
+    // we take the last one since we want to make sure reducer is applied to all files.
+    // _.take(1) will prematurely halt the pipe, therefore produce wrong result
+    _.last()
+  )
 }
 
 RDD.prototype.count = function () {
