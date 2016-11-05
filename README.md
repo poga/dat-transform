@@ -22,7 +22,8 @@ var result = RDD(archive)
   .map(word => kv(word, 1))
 
 // actual run(action)
-result.reduceByKey((x, y) => x + y)
+result
+  .reduceByKey((x, y) => x + y)
   .toArray(res => {
     console.log(res) // [{bar: 2, baz: 1, foo: 1}]
   })
