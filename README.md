@@ -3,6 +3,11 @@
 Lazily-evaluated transformation on [Dat](http://dat-data.com/) archives.
 Inspired by [Resilient Distributed Dataset(RDD)](https://amplab.cs.berkeley.edu/wp-content/uploads/2012/01/nsdi_spark.pdf)
 
+[![Standard - JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+[![npm](https://img.shields.io/npm/v/dat-transform.svg)]()
+
+`npm i dat-transform`
+
 ## Synopsis
 
 word count example:
