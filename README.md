@@ -1,28 +1,28 @@
 # dat-transform
 
 Lazily-evaluated transformation on [Dat](http://dat-data.com/) archives.
-Similiar to Spark's [Resilient Distributed Dataset(RDD)](https://amplab.cs.berkeley.edu/wp-content/uploads/2012/01/nsdi_spark.pdf)
+Inspired by [Resilient Distributed Dataset(RDD)](https://amplab.cs.berkeley.edu/wp-content/uploads/2012/01/nsdi_spark.pdf)
 
-## Usage
+## Synopsis
 
 word count example:
 
 ```js
-const hyperdrive = require('hyperdrive')
-const memdb = require('memdb')
 const {RDD, kv} = require('dat-transform')
 
+const hyperdrive = require('hyperdrive')
+const memdb = require('memdb')
 var drive = hyperdrive(memdb())
 var archive = drive.createArchive(<DAT-ARCHIVE-KEY>, {sparse: true})
 
 // define transforms
-var result = RDD(archive)
+var wc = RDD(archive)
   .splitBy(/[\n\s]/)
   .filter(x => x !== '')
   .map(word => kv(word, 1))
 
 // actual run(action)
-result
+wc
   .reduceByKey((x, y) => x + y)
   .toArray(res => {
     console.log(res) // [{bar: 2, baz: 1, foo: 1}]
