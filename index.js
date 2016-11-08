@@ -228,7 +228,7 @@ function _unmarshal (drive, previous, transforms) {
 
 // create key-value pairs for reduceByKey
 function kv (k, v) {
-  return {k: k, v: v}
+  return [k, v]
 }
 
 module.exports = {RDD, kv, unmarshal}

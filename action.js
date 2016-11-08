@@ -2,10 +2,10 @@ const _ = require('highland')
 
 function reduceByKey (f) {
   return _.reduce({}, (sum, x) => {
-    if (!sum[x.k]) {
-      sum[x.k] = x.v
+    if (!sum[x[0]]) {
+      sum[x[0]] = x[1]
     } else {
-      sum[x.k] = f(sum[x.k], x.v)
+      sum[x[0]] = f(sum[x[0]], x[1])
     }
     return sum
   })
