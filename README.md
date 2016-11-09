@@ -79,7 +79,7 @@ select(f)
 **Partitions** lets you re-index and cache the computed result to another archive.
 
 ```
-partition(f, outArchive, cb)
+partition(outArchive) // return promise
 ```
 
 #### Marshal/Unmarshal
