@@ -13,7 +13,7 @@ function RDD (archive, parent, transform) {
   this._selector = all
 }
 
-RDD.prototype.partition = function (f, outArchive) {
+RDD.prototype.partitionByKey = function (outArchive) {
   var partitions = {}
 
   return new Promise((resolve, reject) => {
@@ -21,7 +21,7 @@ RDD.prototype.partition = function (f, outArchive) {
       ._applyTransform()
       .sequence()
       .each(x => {
-        getPartition(f(x)).write(`${x}\n`)
+        getPartition(x[0]).write(`${x[1]}\n`)
       })
       .done(endPartitions)
 
