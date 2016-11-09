@@ -25,7 +25,7 @@ source.finalize(() => {
       next
         .collect()
         .toArray(x => {
-          t.same(x.map(b => b.toString()), ['value\n1\n2\n3\n4\n5\n\nvalue\n6\n7\n8\n9\n10\n'])
+          t.same(x.map(b => b.toString()), ['value\n1\n2\n3\n4\n5\n\nvalue\n6\n7\n8\n9\n10\n\n'])
           t.same(downloaded, 33)
           t.end()
         })

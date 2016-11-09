@@ -18,8 +18,11 @@ RDD.prototype.partition = function (f, outArchive) {
 
   return new Promise((resolve, reject) => {
     this
-      .action(_.take(null), _.map(x => { return {p: f(x), v: x} }))
-      .each(x => getPartition(x.p).write(`${x.v}`))
+      ._applyTransform()
+      .sequence()
+      .each(x => {
+        getPartition(f(x)).write(`${x}\n`)
+      })
       .done(endPartitions)
 
     function endPartitions () {
@@ -30,10 +33,7 @@ RDD.prototype.partition = function (f, outArchive) {
 
   function getPartition (key) {
     if (!partitions[key]) {
-      partitions[key] = _.pipeline(
-        _.intersperse('\n'),
-        outArchive.createFileWriteStream(`${key}`)
-      )
+      partitions[key] = outArchive.createFileWriteStream(`${key}`)
     }
     return partitions[key]
   }
@@ -100,7 +100,7 @@ RDD.prototype.sortBy = function (f) {
 RDD.prototype.action = function (fileAction, totalAction) {
   return this._applyTransform()
     .pipe(mapToFilePipe(fileAction))
-    .flatten()
+    .sequence()
     .pipe(pipe(totalAction))
 }
 
