@@ -127,7 +127,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal get', function (t) {
+  tape('unmarshal select', function (t) {
     var json = JSON.stringify(
       result
         .select(x => x.name === 'test.csv')
