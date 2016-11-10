@@ -10,6 +10,8 @@ function RDD (archive, parent, transform) {
   this._archive = archive
   this._parent = parent
   this._transform = transform // transform is a stream, which will be applied to each file
+
+  // _selector can only exist on a archive whose _archive is not null
   this._selector = all
 }
 
