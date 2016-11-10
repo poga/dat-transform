@@ -7,11 +7,17 @@ const path = require('path')
 function RDD (archive, parent, transform) {
   if (!(this instanceof RDD)) return new RDD(archive, parent, transform)
 
-  this._archive = archive
+  // set if the RDD is a transform or a select
   this._parent = parent
+
+  // each RDD can only have one of these three set
+  // if _archive is set, the RDD is directly pointed at a archive
+  this._archive = archive
+
+  // if _transform is set, the RDD is a transform on a parent RDD
   this._transform = transform // transform is a stream, which will be applied to each file
 
-  // _selector can only exist on a archive whose _archive is not null
+  // if _selector is set, the RDD is selecting specified files on a archive
   this._selector = all
 }
 
@@ -42,17 +48,20 @@ RDD.prototype.partitionByKey = function (outArchive) {
 }
 
 RDD.prototype.get = function (filename) {
-  if (this._transform) throw new Error('Cannot get file after transformation')
+  if (this._transform || this._selector !== all) throw new Error('Cannot get file after transformation')
 
-  this._selector = x => x.name === filename
-  return this
+  var next = this.select(x => x.name === filename)
+  next._setMarshalInfo('get', filename)
+  return next
 }
 
 RDD.prototype.select = function (selector) {
-  if (this._transform) throw new Error('Cannot select files after transformation')
+  if (this._transform || this._selector !== all) throw new Error('Cannot select files after transformation')
 
-  this._selector = selector
-  return this
+  var next = new RDD(this._archive, this)
+  next._selector = selector
+  next._setMarshalInfo('select', selector.toString())
+  return next
 }
 
 // define a lazily-evaluated transformation on this RDD, retruns new RDD
@@ -150,6 +159,10 @@ function sum () {
 //
 // build a transformation chain without evaluating it
 RDD.prototype._applyTransform = function () {
+  if (this._selector !== all) {
+    return this._parent._eachFile(this._selector)
+  }
+
   if (this._parent) {
     return mapToFile(this._transform)(this._parent._applyTransform())
   }
@@ -222,6 +235,14 @@ function _unmarshal (drive, previous, transforms) {
     case 'sortBy':
       rdd = previous.sortBy(eval(head.params))
       break
+    case 'get':
+      rdd = previous.get(head.params)
+      break
+    case 'select':
+      rdd = previous.select(eval(head.params))
+      break
+    default:
+      throw new Error(`Invalid Marshal Info: ${head}`)
   }
 
   return _unmarshal(drive, rdd, transforms)

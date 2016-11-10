@@ -94,4 +94,49 @@ source.finalize(() => {
         t.end()
       })
   })
+
+  // get
+  tape('marshal get', function (t) {
+    t.same(result.get('test.csv').marshal(), [
+      {type: 'parent', key: source.key.toString('hex')},
+      {type: 'get', params: 'test.csv', paramsType: undefined}
+    ])
+    t.end()
+  })
+
+  tape('unmarshal get', function (t) {
+    var json = JSON.stringify(
+      result
+        .get('test.csv')
+        .marshal())
+    dt.unmarshal(drive, json)
+      .collect()
+      .toArray(x => {
+        t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
+        t.end()
+      })
+  })
+
+  // select
+  tape('marshal select', function (t) {
+    var selector = x => x.name === 'test.csv'
+    t.same(result.select(selector).marshal(), [
+      {type: 'parent', key: source.key.toString('hex')},
+      {type: 'select', params: selector.toString(), paramsType: undefined}
+    ])
+    t.end()
+  })
+
+  tape('unmarshal get', function (t) {
+    var json = JSON.stringify(
+      result
+        .select(x => x.name === 'test.csv')
+        .marshal())
+    dt.unmarshal(drive, json)
+      .collect()
+      .toArray(x => {
+        t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
+        t.end()
+      })
+  })
 })
