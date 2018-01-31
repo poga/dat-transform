@@ -24,13 +24,13 @@ source.finalize(() => {
     result
       .map(x => [x % 2, x])
       .partitionByKey(newArchive).then(next => {
-      next
+        next
         .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['1\n3\n5\n7\n9\n', '2\n4\n6\n8\n10\n'])
           t.end()
         })
-    })
+      })
   })
 
   test('get', function (t) {
@@ -38,14 +38,14 @@ source.finalize(() => {
     result
       .map(x => [x % 2, x])
       .partitionByKey(newArchive).then(next => {
-      next
+        next
         .get('0')
         .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['2\n4\n6\n8\n10\n'])
           t.end()
         })
-    })
+      })
   })
 
   test('select', function (t) {
@@ -53,14 +53,14 @@ source.finalize(() => {
     result
       .map(x => [x % 3, x])
       .partitionByKey(newArchive).then(next => {
-      next
+        next
         .select(x => parseInt(x.name) < 2) // x % 3 < 2
         .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['1\n4\n7\n10\n', '3\n6\n9\n'])
           t.end()
         })
-    })
+      })
   })
 
   test('get only works on RDD before transform', function (t) {

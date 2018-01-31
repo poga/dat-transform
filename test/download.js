@@ -24,14 +24,14 @@ source.finalize(() => {
     result
       .map(x => [x % 2, x])
       .partitionByKey(newArchive).then(next => {
-      next
+        next
         .collect()
         .toArray(x => {
           t.same(x.map(b => b.toString()), ['value\n1\n2\n3\n4\n5\n\nvalue\n6\n7\n8\n9\n10\n\n'])
           t.same(downloaded, 33)
           t.end()
         })
-    })
+      })
   })
 
   test('get only download requested file', function (t) {

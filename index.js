@@ -247,7 +247,7 @@ function _unmarshal (drive, previous, transforms) {
 
   return _unmarshal(drive, rdd, transforms)
 }
-/* eslint-enable no-new-func*/
+/* eslint-enable no-new-func */
 
 // create key-value pairs for reduceByKey
 function kv (k, v) {
@@ -271,4 +271,3 @@ function mapToFile (transform) {
 function all (x) {
   return true
 }
-
