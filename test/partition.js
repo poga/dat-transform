@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -19,7 +19,7 @@ source.finalize(() => {
     .csv()
     .map(row => parseInt(row['value'], 10))
 
-  tape('partition', function (t) {
+  test('partition', function (t) {
     var newArchive = drive2.createArchive()
     result
       .map(x => [x % 2, x])
@@ -33,7 +33,7 @@ source.finalize(() => {
     })
   })
 
-  tape('get', function (t) {
+  test('get', function (t) {
     var newArchive = drive2.createArchive()
     result
       .map(x => [x % 2, x])
@@ -48,7 +48,7 @@ source.finalize(() => {
     })
   })
 
-  tape('select', function (t) {
+  test('select', function (t) {
     var newArchive = drive2.createArchive()
     result
       .map(x => [x % 3, x])
@@ -63,14 +63,14 @@ source.finalize(() => {
     })
   })
 
-  tape('get only works on RDD before transform', function (t) {
+  test('get only works on RDD before transform', function (t) {
     t.throws(() => {
       result.get('test.csv')
     })
     t.end()
   })
 
-  tape('select only works on RDD before transform', function (t) {
+  test('select only works on RDD before transform', function (t) {
     t.throws(() => {
       result.select(x => x.name === 'test.csv')
     })
@@ -82,4 +82,3 @@ function replicate (a, b) {
   var stream = a.replicate()
   stream.pipe(b.replicate()).pipe(stream)
 }
-

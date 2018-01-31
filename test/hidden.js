@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -19,7 +19,7 @@ source.finalize(() => {
     .csv()
     .map(row => parseInt(row['value'], 10))
 
-  tape('hidden file should be ignored', function (t) {
+  test('hidden file should be ignored', function (t) {
     result.collect()
       .toArray(res => {
         t.same(res, [1, 2, 3, 4, 5])

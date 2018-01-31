@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -14,7 +14,7 @@ source.finalize(() => {
   var result = dt.RDD(source)
 
   // csv
-  tape('marshal csv', function (t) {
+  test('marshal csv', function (t) {
     t.same(result.csv().marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
       {type: 'csv', params: null, paramsType: undefined}
@@ -22,7 +22,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal csv', function (t) {
+  test('unmarshal csv', function (t) {
     var json = JSON.stringify(result.csv().marshal())
     dt.unmarshal(drive, json)
       .collect()
@@ -33,7 +33,7 @@ source.finalize(() => {
   })
 
   // splitBy
-  tape('marshal splitBy', function (t) {
+  test('marshal splitBy', function (t) {
     t.same(result.splitBy(/\s/).marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
       {type: 'splitBy', params: '\\s', paramsType: 'regexp'}
@@ -41,7 +41,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal splitBy', function (t) {
+  test('unmarshal splitBy', function (t) {
     var json = JSON.stringify(result.splitBy(/\n/).marshal())
     dt.unmarshal(drive, json)
       .collect()
@@ -52,7 +52,7 @@ source.finalize(() => {
   })
 
   // map
-  tape('marshal map', function (t) {
+  test('marshal map', function (t) {
     var f = x => x + 1
     t.same(result.map(f).marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
@@ -61,7 +61,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal map', function (t) {
+  test('unmarshal map', function (t) {
     var json = JSON.stringify(result.csv().map(row => parseInt(row['value'], 10)).marshal())
     dt.unmarshal(drive, json)
       .collect()
@@ -72,7 +72,7 @@ source.finalize(() => {
   })
 
   // filter
-  tape('marshal filter', function (t) {
+  test('marshal filter', function (t) {
     var f = x => x === 1
     t.same(result.filter(f).marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
@@ -81,7 +81,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal filter', function (t) {
+  test('unmarshal filter', function (t) {
     var json = JSON.stringify(
       result.csv()
         .map(row => parseInt(row['value'], 10))
@@ -96,7 +96,7 @@ source.finalize(() => {
   })
 
   // get
-  tape('marshal get', function (t) {
+  test('marshal get', function (t) {
     t.same(result.get('test.csv').marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
       {type: 'get', params: 'test.csv', paramsType: undefined}
@@ -104,7 +104,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal get', function (t) {
+  test('unmarshal get', function (t) {
     var json = JSON.stringify(
       result
         .get('test.csv')
@@ -118,7 +118,7 @@ source.finalize(() => {
   })
 
   // select
-  tape('marshal select', function (t) {
+  test('marshal select', function (t) {
     var selector = x => x.name === 'test.csv'
     t.same(result.select(selector).marshal(), [
       {type: 'parent', key: source.key.toString('hex')},
@@ -127,7 +127,7 @@ source.finalize(() => {
     t.end()
   })
 
-  tape('unmarshal select', function (t) {
+  test('unmarshal select', function (t) {
     var json = JSON.stringify(
       result
         .select(x => x.name === 'test.csv')

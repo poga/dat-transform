@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -11,7 +11,7 @@ fs.createReadStream('test/test.csv').pipe(source.createFileWriteStream('test.csv
 fs.createReadStream('test/test2.csv').pipe(source.createFileWriteStream('test2.csv'))
 
 source.finalize(() => {
-  tape('partition will download everything', function (t) {
+  test('partition will download everything', function (t) {
     var downloaded = 0
     var drive2 = hyperdrive(memdb())
     var peer = drive2.createArchive(source.key, {sparse: true})
@@ -34,7 +34,7 @@ source.finalize(() => {
     })
   })
 
-  tape('get only download requested file', function (t) {
+  test('get only download requested file', function (t) {
     var downloaded = 0
     var drive2 = hyperdrive(memdb())
     var peer = drive2.createArchive(source.key, {sparse: true})
@@ -51,7 +51,7 @@ source.finalize(() => {
       })
   })
 
-  tape('select only download requested file', function (t) {
+  test('select only download requested file', function (t) {
     var downloaded = 0
     var drive2 = hyperdrive(memdb())
     var peer = drive2.createArchive(source.key, {sparse: true})
@@ -74,4 +74,3 @@ function replicate (a, b) {
   var stream = a.replicate()
   stream.pipe(b.replicate()).pipe(stream)
 }
-

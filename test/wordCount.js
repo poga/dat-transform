@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -20,7 +20,7 @@ source.finalize(() => {
     .filter(x => x !== '')
     .map(word => dt.kv(word, 1))
 
-  tape('word count', function (t) {
+  test('word count', function (t) {
     result.reduceByKey((x, y) => x + y)
       .toArray(res => {
         t.same(res, [{bar: 4, baz: 2, foo: 2}])

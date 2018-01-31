@@ -1,7 +1,7 @@
 const dt = require('..')
 const hyperdrive = require('hyperdrive')
 const memdb = require('memdb')
-const tape = require('tape')
+const test = require('tap').test
 const fs = require('fs')
 
 var drive = hyperdrive(memdb())
@@ -22,7 +22,7 @@ source.finalize(() => {
     .map(x => x + 1)
 
   // since transform is applied to each file, we won't get correct data
-  tape('sort', function (t) {
+  test('sort', function (t) {
     result.sortBy((x, y) => y - x)
       .collect()
       .toArray(res => {
@@ -32,7 +32,7 @@ source.finalize(() => {
   })
 
   // if we want to sort the whole data, use takeSortBy
-  tape('takeSortedBy', function (t) {
+  test('takeSortedBy', function (t) {
     result
       .takeSortedBy((x, y) => y - x)
       .toArray(res => {
@@ -41,7 +41,7 @@ source.finalize(() => {
       })
   })
 
-  tape('count', function (t) {
+  test('count', function (t) {
     result
       .count()
       .toArray(res => {
@@ -50,7 +50,7 @@ source.finalize(() => {
       })
   })
 
-  tape('sum', function (t) {
+  test('sum', function (t) {
     result
       .sum()
       .toArray(res => {
@@ -59,7 +59,7 @@ source.finalize(() => {
       })
   })
 
-  tape('take 1', function (t) {
+  test('take 1', function (t) {
     result.take(1)
       .toArray(res => {
         t.same(res, [3])
@@ -67,7 +67,7 @@ source.finalize(() => {
       })
   })
 
-  tape('take all', function (t) {
+  test('take all', function (t) {
     result.collect()
       .sortBy((a, b) => { return a - b })
       .toArray(res => {
@@ -76,7 +76,7 @@ source.finalize(() => {
       })
   })
 
-  tape('transform can be reused', function (t) {
+  test('transform can be reused', function (t) {
     result
       .take(2)
       .toArray(res => {
@@ -88,7 +88,7 @@ source.finalize(() => {
       })
   })
 
-  tape('transform can be used concurrently', function (t) {
+  test('transform can be used concurrently', function (t) {
     var c = 0
     result.take(2).toArray(res => {
       t.same(res, [3, 5])
