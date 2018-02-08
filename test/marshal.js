@@ -1,142 +1,109 @@
+'use strict'
 const dt = require('..')
-const hyperdrive = require('hyperdrive')
-const memdb = require('memdb')
 const test = require('tap').test
-const fs = require('fs')
+const { createSource, createSparsePeer } = require('./util/testDrive')
+const toPromise = require('./util/toPromise')
 
-var drive = hyperdrive(memdb())
-var source = drive.createArchive()
-
-fs.createReadStream('test/test.csv').pipe(source.createFileWriteStream('test.csv'))
-fs.createReadStream('test/test2.csv').pipe(source.createFileWriteStream('test2.csv'))
-
-source.finalize(() => {
+createSource().then(source => {
   var result = dt.RDD(source)
 
-  // csv
-  test('marshal csv', function (t) {
-    t.same(result.csv().marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
+  function marshalTest (name, parts) {
+    const op = parts.op
+    const jsonOps = parts.jsonOps
+    const verify = parts.verify
+    // All operations run on the same source, the first marshal operations
+    // should always be the parent definition.
+    jsonOps.unshift({type: 'parent', key: source.key.toString('hex')})
+
+    test(`marshal ${name}`, t => {
+      t.same(op.marshal(), jsonOps, 'The marshal output fits expectations')
+      t.end()
+    })
+
+    test(`unmarshal ${name}`, t =>
+      createSparsePeer(source)
+        .then(peer => toPromise(
+          dt.unmarshal(
+            peer,
+            JSON.stringify(jsonOps)
+          ).collect()
+        ))
+        .then(x => verify(t, x))
+    )
+  }
+
+  test('making sure the source is correct', t =>
+    toPromise(
+      result
+        .csv()
+        .collect()
+    )
+    .then(x => {
+      t.same(x.map(b => b.value), ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+    })
+  )
+
+  marshalTest('csv', {
+    op: result.csv(),
+    jsonOps: [
       {type: 'csv', params: null, paramsType: undefined}
-    ])
-    t.end()
+    ],
+    verify: (t, x) => t.same(x.map(b => b.value), ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
   })
 
-  test('unmarshal csv', function (t) {
-    var json = JSON.stringify(result.csv().marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x.map(b => b.value), ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
-        t.end()
-      })
-  })
-
-  // splitBy
-  test('marshal splitBy', function (t) {
-    t.same(result.splitBy(/\s/).marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
+  marshalTest('splitBy', {
+    op: result.splitBy(/\s/),
+    jsonOps: [
       {type: 'splitBy', params: '\\s', paramsType: 'regexp'}
-    ])
-    t.end()
+    ],
+    verify: (t, x) => t.same(x, ['value', '1', '2', '3', '4', '5', '', 'value', '6', '7', '8', '9', '10', ''])
   })
 
-  test('unmarshal splitBy', function (t) {
-    var json = JSON.stringify(result.splitBy(/\n/).marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x, ['value', '1', '2', '3', '4', '5', '', 'value', '6', '7', '8', '9', '10', ''])
-        t.end()
-      })
-  })
+  {
+    const mapper = row => parseInt(row.value, 10) + 1
+    marshalTest('map', {
+      op: result.csv().map(mapper),
+      jsonOps: [
+        {type: 'csv', params: null, paramsType: undefined},
+        {type: 'map', params: mapper.toString(), paramsType: undefined}
+      ],
+      verify: (t, x) => t.same(x, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    })
+  }
 
-  // map
-  test('marshal map', function (t) {
-    var f = x => x + 1
-    t.same(result.map(f).marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
-      {type: 'map', params: f.toString(), paramsType: undefined}
-    ])
-    t.end()
-  })
+  {
+    const filter = x => x % 2 === 0
+    const mapper = row => parseInt(row.value, 10)
+    marshalTest('filter', {
+      op: result
+        .csv()
+        .map(mapper)
+        .filter(filter),
+      jsonOps: [
+        {type: 'csv', params: null, paramsType: undefined},
+        {type: 'map', params: mapper.toString(), paramsType: undefined},
+        {type: 'filter', params: filter.toString(), paramsType: undefined}
+      ],
+      verify: (t, x) => t.same(x, [2, 4, 6, 8, 10])
+    })
+  }
 
-  test('unmarshal map', function (t) {
-    var json = JSON.stringify(result.csv().map(row => parseInt(row['value'], 10)).marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        t.end()
-      })
-  })
-
-  // filter
-  test('marshal filter', function (t) {
-    var f = x => x === 1
-    t.same(result.filter(f).marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
-      {type: 'filter', params: f.toString(), paramsType: undefined}
-    ])
-    t.end()
-  })
-
-  test('unmarshal filter', function (t) {
-    var json = JSON.stringify(
-      result.csv()
-        .map(row => parseInt(row['value'], 10))
-        .filter(x => x % 2 === 0)
-        .marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x, [2, 4, 6, 8, 10])
-        t.end()
-      })
-  })
-
-  // get
-  test('marshal get', function (t) {
-    t.same(result.get('test.csv').marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
+  marshalTest('get', {
+    op: result.get('test.csv'),
+    jsonOps: [
       {type: 'get', params: 'test.csv', paramsType: undefined}
-    ])
-    t.end()
+    ],
+    verify: (t, x) => t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
   })
 
-  test('unmarshal get', function (t) {
-    var json = JSON.stringify(
-      result
-        .get('test.csv')
-        .marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
-        t.end()
-      })
-  })
-
-  // select
-  test('marshal select', function (t) {
-    var selector = x => x.name === 'test.csv'
-    t.same(result.select(selector).marshal(), [
-      {type: 'parent', key: source.key.toString('hex')},
-      {type: 'select', params: selector.toString(), paramsType: undefined}
-    ])
-    t.end()
-  })
-
-  test('unmarshal select', function (t) {
-    var json = JSON.stringify(
-      result
-        .select(x => x.name === 'test.csv')
-        .marshal())
-    dt.unmarshal(drive, json)
-      .collect()
-      .toArray(x => {
-        t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
-        t.end()
-      })
-  })
+  {
+    const selector = location => location === 'test.csv'
+    marshalTest('select', {
+      op: result.select(selector),
+      jsonOps: [
+        {type: 'select', params: selector.toString(), paramsType: undefined}
+      ],
+      verify: (t, x) => t.same(x.toString(), 'value\n1\n2\n3\n4\n5\n')
+    })
+  }
 })

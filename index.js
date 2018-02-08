@@ -1,8 +1,10 @@
+'use strict'
 const through2 = require('through2')
 const _ = require('highland')
 const a = require('./action')
 const tf = require('./transform')
 const path = require('path')
+const ReaddirStream = require('dat-readdir-stream')
 
 function RDD (archive, parent, transform) {
   if (!(this instanceof RDD)) return new RDD(archive, parent, transform)
@@ -28,20 +30,20 @@ RDD.prototype.partitionByKey = function (outArchive) {
     this
       ._applyTransform()
       .sequence()
-      .each(x => {
-        getPartition(x[0]).write(`${x[1]}\n`)
-      })
+      .each(x => getPartition(x[0]).write(`${x[1]}\n`))
       .done(endPartitions)
 
     function endPartitions () {
       Object.keys(partitions).forEach(k => partitions[k].end())
-      outArchive.finalize(() => { resolve(new RDD(outArchive)) })
+      setTimeout(() => {
+        resolve(new RDD(outArchive))
+      }, 200)
     }
   })
 
   function getPartition (key) {
     if (!partitions[key]) {
-      partitions[key] = outArchive.createFileWriteStream(`${key}`)
+      partitions[key] = outArchive.createWriteStream(`${key}`)
     }
     return partitions[key]
   }
@@ -50,7 +52,7 @@ RDD.prototype.partitionByKey = function (outArchive) {
 RDD.prototype.get = function (filename) {
   if (this._transform || this._selector !== all) throw new Error('Cannot get file after transformation')
 
-  var next = this.select(x => x.name === filename)
+  var next = this.select(location => location === filename)
   next._setMarshalInfo('get', filename)
   return next
 }
@@ -174,10 +176,13 @@ RDD.prototype._applyTransform = function () {
 // all stream is wrapped with highland
 RDD.prototype._eachFile = function (filter) {
   var archive = this._archive
-  return _(archive.list({live: false}).pipe(through2.obj(function (entry, enc, cb) {
-    if (filter(entry) && !path.basename(entry.name).startsWith('.')) this.push(_(archive.createFileReadStream(entry)))
-    cb()
-  })))
+  return _(new ReaddirStream(archive, {cwd: '', recursive: true})
+    .pipe(through2.obj(function (entry, enc, cb) {
+      if (filter(entry.location, entry.stat) && !path.basename(entry.location).startsWith('.')) {
+        this.push(_(archive.createReadStream(entry.location)))
+      }
+      cb()
+    })))
 }
 
 RDD.prototype.marshal = function () {
@@ -214,7 +219,7 @@ function _unmarshal (drive, previous, transforms) {
   var rdd
   switch (head.type) {
     case 'parent':
-      rdd = new RDD(drive.createArchive(head.key, {sparse: true}))
+      rdd = new RDD(drive)
       break
     case 'splitBy':
       if (head.paramsType === 'regexp') {
@@ -256,8 +261,8 @@ function kv (k, v) {
 
 module.exports = {RDD, kv, unmarshal}
 
-function mapToFilePipe (action) {
-  return pipe(_.map(file => action(file)))
+function mapToFilePipe (transform) {
+  return pipe(mapToFile(transform))
 }
 
 function pipe (action) {
@@ -265,7 +270,7 @@ function pipe (action) {
 }
 
 function mapToFile (transform) {
-  return _.map(file => transform(file))
+  return _.map(transform)
 }
 
 function all (x) {
