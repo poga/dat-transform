@@ -30,5 +30,8 @@
     "data processing"
   ],
   "author": "Poga Po<poga.bahamut@gmail.com>",
+  "contributors": [
+    "Martin Heidegger <martin.heidegger@gmail.com>"
+  ],
   "license": "MIT"
 }
