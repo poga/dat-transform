@@ -16,7 +16,7 @@ word count example:
 const {RDD, kv} = require('dat-transform')
 
 const Hyperdrive = require('hyperdrive')
-const memdb = require('random-access-memory')
+const ram = require('random-access-memory')
 const archive = new Hyperdrive(ram, '<DAT-ARCHIVE-KEY>', {sparse: true})
 
 // define transforms
@@ -43,7 +43,7 @@ Instead, transformations will be pipelined and computed when we actually need th
 
 Following transforms are included:
 
-```
+```js
 map(f)
 filter(f)
 splitBy(f)
@@ -54,7 +54,7 @@ sortBy(f) // check test/index.js for gotcha
 
 Examples of actions:
 
-```
+```js
 collect()
 take(n)
 reduceByKey(f)
@@ -68,7 +68,7 @@ takeSortedBy()
 `dat-transform` provides indexing via [hyperdrive](https://github.com/mafintosh/hyperdrive)'s list of entry.
 You can specify the entries you want to computed with, which can greatly reduce bandwidth usage.
 
-```
+```js
 get(entryName)
 select(f)
 ```
@@ -77,7 +77,7 @@ select(f)
 
 **Partitions** lets you re-index and cache the computed result to another archive.
 
-```
+```js
 partition(outArchive) // return promise
 ```
 
@@ -85,7 +85,7 @@ partition(outArchive) // return promise
 
 Transforms can be marshalled as JSON. which allows execution on remote machine.
 
-```
+```js
 RDD.marshal
 unmarshal
 ```
