@@ -1,85 +1,49 @@
+'use strict'
 const dt = require('..')
-const hyperdrive = require('hyperdrive')
-const memdb = require('memdb')
-const tape = require('tape')
-const fs = require('fs')
+const test = require('tap').test
+const { createDrive, createSparsePeer } = require('./util/testDrive')
+const toPromise = require('./util/toPromise')
 
-var drive = hyperdrive(memdb())
-var source = drive.createArchive()
-
-fs.createReadStream('test/test.csv').pipe(source.createFileWriteStream('test.csv'))
-fs.createReadStream('test/test2.csv').pipe(source.createFileWriteStream('test2.csv'))
-
-source.finalize(() => {
-  var drive2 = hyperdrive(memdb())
-  var peer = drive2.createArchive(source.key, {sparse: true})
-  replicate(source, peer)
-
+createSparsePeer().then(peer => {
   var result = dt.RDD(peer)
     .csv()
     .map(row => parseInt(row['value'], 10))
 
-  tape('partition', function (t) {
-    var newArchive = drive2.createArchive()
+  test('partition', t =>
     result
       .map(x => [x % 2, x])
-      .partitionByKey(newArchive).then(next => {
-      next
-        .collect()
-        .toArray(x => {
-          t.same(x.map(b => b.toString()), ['1\n3\n5\n7\n9\n', '2\n4\n6\n8\n10\n'])
-          t.end()
-        })
-    })
-  })
+      .partitionByKey(createDrive())
+      .then(newDt => toPromise(newDt.collect()))
+      .then(x => t.same(x.map(b => b.toString()).join(''), '1\n3\n5\n7\n9\n2\n4\n6\n8\n10\n', 'should contain both partitions after another'))
+  )
 
-  tape('get', function (t) {
-    var newArchive = drive2.createArchive()
+  test('get', t =>
     result
       .map(x => [x % 2, x])
-      .partitionByKey(newArchive).then(next => {
-      next
-        .get('0')
-        .collect()
-        .toArray(x => {
-          t.same(x.map(b => b.toString()), ['2\n4\n6\n8\n10\n'])
-          t.end()
-        })
-    })
-  })
+      .partitionByKey(createDrive())
+      .then(newDt => toPromise(newDt.get('0').collect()))
+      .then(x => t.same(x.map(b => b.toString()).join(''), '2\n4\n6\n8\n10\n', 'should contain only 0 partition'))
+  )
 
-  tape('select', function (t) {
-    var newArchive = drive2.createArchive()
+  test('select', t =>
     result
       .map(x => [x % 3, x])
-      .partitionByKey(newArchive).then(next => {
-      next
-        .select(x => parseInt(x.name) < 2) // x % 3 < 2
-        .collect()
-        .toArray(x => {
-          t.same(x.map(b => b.toString()), ['1\n4\n7\n10\n', '3\n6\n9\n'])
-          t.end()
-        })
-    })
-  })
+      .partitionByKey(createDrive())
+      .then(newDt => toPromise(
+        newDt
+          .select(x => parseInt(x, 10) < 2) // x % 3 < 2
+          .collect()
+      ))
+      .then(x => t.same(x.map(b => b.toString()).join(''), '1\n4\n7\n10\n3\n6\n9\n', 'should match the selection after the partition'))
+  )
 
-  tape('get only works on RDD before transform', function (t) {
-    t.throws(() => {
-      result.get('test.csv')
-    })
+  test('get only works on RDD before transform', t => {
+    t.throws(() => result.get('test.csv'))
     t.end()
   })
 
-  tape('select only works on RDD before transform', function (t) {
-    t.throws(() => {
-      result.select(x => x.name === 'test.csv')
-    })
+  test('select only works on RDD before transform', t => {
+    t.throws(() => result.select(x => x.name === 'test.csv'))
     t.end()
   })
 })
-
-function replicate (a, b) {
-  var stream = a.replicate()
-  stream.pipe(b.replicate()).pipe(stream)
-}
-

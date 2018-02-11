@@ -15,10 +15,9 @@ word count example:
 ```js
 const {RDD, kv} = require('dat-transform')
 
-const hyperdrive = require('hyperdrive')
-const memdb = require('memdb')
-var drive = hyperdrive(memdb())
-var archive = drive.createArchive(<DAT-ARCHIVE-KEY>, {sparse: true})
+const Hyperdrive = require('hyperdrive')
+const memdb = require('random-access-memory')
+const archive = new Hyperdrive(ram, '<DAT-ARCHIVE-KEY>', {sparse: true})
 
 // define transforms
 var wc = RDD(archive)

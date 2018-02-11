@@ -1,20 +1,10 @@
+'use strict'
 const dt = require('..')
-const hyperdrive = require('hyperdrive')
-const memdb = require('memdb')
-const tape = require('tape')
-const fs = require('fs')
+const test = require('tap').test
+const { createSparsePeer } = require('./util/testDrive')
+const toPromise = require('./util/toPromise')
 
-var drive = hyperdrive(memdb())
-var source = drive.createArchive()
-
-fs.createReadStream('test/test.csv').pipe(source.createFileWriteStream('test.csv'))
-fs.createReadStream('test/test2.csv').pipe(source.createFileWriteStream('test2.csv'))
-
-source.finalize(() => {
-  var drive2 = hyperdrive(memdb())
-  var peer = drive2.createArchive(source.key, {sparse: true})
-  replicate(source, peer)
-
+createSparsePeer().then(peer => {
   var result = dt.RDD(peer)
     .csv()
     .map(row => parseInt(row['value'], 10))
@@ -22,90 +12,53 @@ source.finalize(() => {
     .map(x => x + 1)
 
   // since transform is applied to each file, we won't get correct data
-  tape('sort', function (t) {
-    result.sortBy((x, y) => y - x)
+  test('sort', t =>
+    toPromise(result
+      .sortBy((x, y) => y - x)
       .collect()
-      .toArray(res => {
-        t.same(res, [11, 9, 7, 5, 3, 21, 19, 17, 15, 13])
-        t.end()
-      })
-  })
+    )
+      .then(res => t.deepEquals(res, [11, 9, 7, 5, 3, 21, 19, 17, 15, 13]))
+  )
 
   // if we want to sort the whole data, use takeSortBy
-  tape('takeSortedBy', function (t) {
-    result
-      .takeSortedBy((x, y) => y - x)
-      .toArray(res => {
-        t.same(res, [21, 19, 17, 15, 13, 11, 9, 7, 5, 3])
-        t.end()
-      })
-  })
+  test('takeSortedBy', t =>
+    toPromise(result.takeSortedBy((x, y) => y - x))
+      .then(res => t.same(res, [21, 19, 17, 15, 13, 11, 9, 7, 5, 3]))
+  )
 
-  tape('count', function (t) {
-    result
-      .count()
-      .toArray(res => {
-        t.same(res, [10])
-        t.end()
-      })
-  })
+  test('count', t =>
+    toPromise(result.count())
+      .then(res => t.same(res, [10]))
+  )
 
-  tape('sum', function (t) {
-    result
-      .sum()
-      .toArray(res => {
-        t.same(res, [120])
-        t.end()
-      })
-  })
+  test('sum', t =>
+    toPromise(result.sum())
+      .then(res => t.same(res, [120]))
+  )
 
-  tape('take 1', function (t) {
-    result.take(1)
-      .toArray(res => {
-        t.same(res, [3])
-        t.end()
-      })
-  })
+  test('take 1', t =>
+    toPromise(result.take(1))
+      .then(res => t.same(res, [3]))
+  )
 
-  tape('take all', function (t) {
-    result.collect()
-      .sortBy((a, b) => { return a - b })
-      .toArray(res => {
-        t.same(res, [3, 5, 7, 9, 11, 13, 15, 17, 19, 21])
-        t.end()
-      })
-  })
+  test('take all', t =>
+    toPromise(result.collect().sortBy((a, b) => a - b))
+      .then(res => t.same(res, [3, 5, 7, 9, 11, 13, 15, 17, 19, 21]))
+  )
 
-  tape('transform can be reused', function (t) {
-    result
-      .take(2)
-      .toArray(res => {
-        t.same(res, [3, 5])
-        result.take(1).toArray(res => {
-          t.same(res, [3])
-          t.end()
-        })
-      })
-  })
+  test('transform can be reused', t =>
+    toPromise(result.take(2))
+      .then(res => t.same(res, [3, 5]))
+      .then(() => toPromise(result.take(1)))
+      .then(res => t.same(res, [3]))
+  )
 
-  tape('transform can be used concurrently', function (t) {
-    var c = 0
-    result.take(2).toArray(res => {
-      t.same(res, [3, 5])
-      c += 1
-      if (c === 2) done()
-    })
-    result.take(1).toArray(res => {
-      t.same(res, [3])
-      c += 1
-      if (c === 2) done()
-    })
-
-    function done () { t.end() }
-  })
+  test('transform can be used concurrently', t =>
+    Promise.all([
+      toPromise(result.take(2))
+        .then(res => t.same(res, [3, 5])),
+      toPromise(result.take(1))
+        .then(res => t.same(res, [3]))
+    ])
+  )
 })
-
-function replicate (a, b) {
-  var stream = a.replicate()
-  stream.pipe(b.replicate()).pipe(stream)
-}
